@@ -16,8 +16,8 @@ parser = argparse.ArgumentParser(
 parser.add_argument('gradescope', help='Gradescope Assignment CSV')
 parser.add_argument('assignmentID', help='Quercus Assignment ID')
 parser.add_argument('--quercus_gradebook',
-                    default='Grades.csv',
-                    help='Quercus Gradebook Excel File')
+                    default='QuercusGradebook.csv',
+                    help='Quercus Gradebook Export')
 
 if 'ipykernel' in sys.argv[0]:  # running in ipython terminal. use test parameters.
     args = parser.parse_args(
@@ -35,8 +35,14 @@ aid = gradebook.columns[gradebook.columns.str.find(args.assignmentID) > 0][0]
 
 # Merge Quercus and Gradescope using utorid
 gradescope = gradescope.loc[gradescope['UTORid'].notna(), :]
+gradescope['Score'] = gradescope['Total Score'] / gradescope['Max Points']
 gradescope = gradescope.set_index('UTORid')['Score']
+gradescope.clip(0, 1, inplace=True)  # keep score within 0% to 100%
+
 gradebook.loc[2:, aid] = gradebook['SIS User ID'].iloc[2:].map(gradescope)
+
+# Convert from fraction to number of points
+gradebook.loc[2:, aid] = gradebook.loc[2:, aid] * float(gradebook.loc[1, aid])
 
 # Excerpt columns we need, then write to CSV
 gradebook = gradebook[[
