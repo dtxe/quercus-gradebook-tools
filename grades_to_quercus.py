@@ -63,15 +63,6 @@ if args.assignmentID is None:
 else:
     assignmentID = args.assignmentID
 
-# Import UTAGT roster
-roster = pd.read_csv(args.utagt_roster)
-
-# Merge Quercus Gradebook and UTAGT Groups Roster
-gradebook = gradebook.merge(roster[['UTORid', 'Email']],
-                            left_on='SIS User ID',
-                            right_on='UTORid',
-                            how='left')
-
 # which assignment to write scores to
 aid = gradebook.columns[gradebook.columns.str.find(assignmentID) > 0][0]
 
@@ -85,6 +76,15 @@ else:
 if 'Problem ID' in scores.columns:
     # MATLAB grader export
     matlab = scores
+    
+    # Import UTAGT roster
+    roster = pd.read_csv(args.utagt_roster)
+
+    # Merge Quercus Gradebook and UTAGT Groups Roster
+    gradebook = gradebook.merge(roster[['UTORid', 'Email']],
+                            left_on='SIS User ID',
+                            right_on='UTORid',
+                            how='left')
     
     matlab = matlab[['Student Email', '% Score', 'Problem ID']]
     matlab['Score'] = matlab['% Score'].str.replace(
